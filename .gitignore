@@ -1,0 +1,26 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+
+# Android / iOS generated artefacts
+app/android/.gradle/
+app/android/local.properties
+app/ios/Pods/
+app/ios/.symlinks/
+app/macos/Pods/
+app/.dart_tool/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (prototype tooling éventuel)
+node_modules/

@@ -1,0 +1,30 @@
+name: gbe
+description: "Gbè — apprends le fon, un mot à la fois."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  # Pour ajouter une police (recommandé avant une démo publique) :
+  # 1. télécharge une police libre (ex. Fraunces, Literata) dans assets/fonts/
+  # 2. décommente ce bloc et adapte la famille dans lib/core/theme.dart
+  # fonts:
+  #   - family: Serif
+  #     fonts:
+  #       - asset: assets/fonts/Serif-Regular.ttf
+  #       - asset: assets/fonts/Serif-SemiBold.ttf
+  #         weight: 600

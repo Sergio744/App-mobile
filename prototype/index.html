@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Gbè — prototype</title>
+<style>
+  /* ─────────────────────────────  Base  ───────────────────────────── */
+  :root{
+    --cream:#FDF6EC; --sand:#F1E4D1; --surface:#FFFCF7;
+    --ink:#221C17; --ink-soft:#6B5D52;
+    --terra:#C4623F; --ochre:#D89B4A; --forest:#2E6B55; --plum:#7B5A86;
+    --success:#4A8B5F; --warn:#C98A2E; --danger:#B3564F;
+    --serif: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:var(--sans); background:#E7DCCB; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    background-image:radial-gradient(circle at 30% 10%, #F3E9DA 0%, #E1D4C0 60%, #D8C9B2 100%);
+  }
+  .phone{
+    width:100%; max-width:420px; height:100dvh; max-height:900px;
+    background:var(--cream); position:relative; overflow:hidden;
+    display:flex; flex-direction:column;
+    box-shadow:0 40px 80px -30px rgba(52,36,20,.45), 0 2px 0 rgba(255,255,255,.6) inset;
+  }
+  @media (min-width:480px) and (min-height:760px){
+    .phone{border-radius:38px; height:840px; border:9px solid #1d1712}
+  }
+  .scroll{flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch}
+  .scroll::-webkit-scrollbar{width:0}
+  .pad{padding:0 20px}
+  h1,h2,h3{font-family:var(--serif); font-weight:600; margin:0; letter-spacing:-.4px}
+  .eyebrow{
+    font-size:11px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase;
+    color:var(--terra);
+  }
+  .muted{color:var(--ink-soft)}
+  .small{font-size:12.5px}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+  .btn{
+    width:100%; height:54px; border-radius:18px; font-size:16px; font-weight:600;
+    background:var(--terra); color:#fff; transition:transform .12s ease, opacity .2s;
+  }
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{background:transparent; border:1.5px solid var(--sand); color:var(--ink)}
+  .btn:disabled{opacity:.45; cursor:default}
+  .card{
+    background:var(--surface); border:1px solid var(--sand); border-radius:22px; padding:18px;
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:100px;
+    font-size:12px; font-weight:600; background:rgba(107,93,82,.1); color:var(--ink-soft);
+  }
+  .bar{height:8px; border-radius:8px; background:var(--sand); overflow:hidden}
+  .bar>i{display:block; height:100%; border-radius:8px; background:var(--forest);
+    transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .row{display:flex; align-items:center}
+  .grow{flex:1}
+  .gap8{height:8px}.gap12{height:12px}.gap16{height:16px}.gap20{height:20px}.gap28{height:28px}
+
+  /* ─────────────────────────────  Onglets  ───────────────────────────── */
+  .tabs{
+    display:flex; background:var(--surface); border-top:1px solid var(--sand);
+    padding:8px 0 calc(8px + env(safe-area-inset-bottom));
+  }
+  .tab{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:11px; font-weight:600; color:var(--ink-soft); padding:6px 0; border-radius:12px;
+  }
+  .tab.on{color:var(--terra)}
+  .tab svg{width:22px;height:22px}
+  .hidden{display:none !important}
+
+  /* ─────────────────────────────  En-tête  ───────────────────────────── */
+  .top{padding:18px 20px 8px; display:flex; align-items:flex-start; gap:12px}
+  .logo{font-family:var(--serif); font-size:38px; line-height:1; letter-spacing:-1.5px}
+  .streak{
+    display:flex; align-items:center; gap:6px; padding:9px 13px; border-radius:16px;
+    background:rgba(201,138,46,.14); font-weight:700; font-size:16px;
+  }
+  .streak.zero{background:var(--sand)}
+
+  /* ─────────────────────────────  Carte du jour  ───────────────────────────── */
+  .today{
+    margin:0 20px; padding:24px; border-radius:28px; color:#fff;
+    background:linear-gradient(145deg,#357A62 0%,#24544A 100%);
+    box-shadow:0 18px 34px -18px rgba(36,84,74,.75);
+  }
+  .today .num{font-size:40px; font-weight:700; letter-spacing:-1px; line-height:1.05}
+  .today .bar{background:rgba(255,255,255,.18)}
+  .today .bar>i{background:var(--ochre)}
+  .btn.light{background:var(--cream); color:var(--ink)}
+  .btn.light:disabled{background:rgba(255,255,255,.18); color:rgba(255,255,255,.55)}
+
+  /* ─────────────────────────────  Thèmes  ───────────────────────────── */
+  .deck{
+    display:flex; gap:13px; align-items:center; padding:14px 16px; background:var(--surface);
+    border:1px solid var(--sand); border-radius:20px; margin-bottom:10px; width:100%; text-align:left;
+  }
+  .deck .emo{
+    width:44px; height:44px; border-radius:14px; display:grid; place-items:center; font-size:20px; flex:none;
+  }
+  .deck .name{font-weight:600; font-size:15px}
+
+  /* ─────────────────────────────  Étude  ───────────────────────────── */
+  .study{flex:1; display:flex; flex-direction:column; padding:0 20px 16px}
+  .study-top{display:flex; align-items:center; gap:14px; padding:14px 0 12px}
+  .xbtn{
+    width:38px;height:38px;border-radius:50%;background:var(--sand);
+    display:grid;place-items:center;font-size:18px;color:var(--ink-soft);flex:none
+  }
+  .study-count{font-size:14px;font-weight:600;color:var(--ink-soft)}
+  .flip{
+    flex:1; background:var(--surface); border:1px solid var(--sand); border-radius:28px;
+    padding:26px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; box-shadow:0 22px 40px -26px rgba(34,28,23,.35); overflow-y:auto;
+    transition:box-shadow .2s;
+  }
+  .flip:active{box-shadow:0 10px 20px -14px rgba(34,28,23,.3)}
+  .word{
+    font-family:var(--serif); font-size:40px; line-height:1.18; letter-spacing:-.8px;
+    margin:22px 0 10px; word-break:break-word;
+  }
+  .pron{font-style:italic; color:var(--ink-soft); font-size:14px}
+  .reveal-hint{font-size:13px; color:var(--ink-soft); margin-top:26px}
+  .answer{animation:rise .3s cubic-bezier(.2,.8,.2,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .rule{width:40px;height:3px;background:var(--sand);margin:4px auto 20px;border-radius:3px}
+  .translation{font-family:var(--serif); font-size:23px}
+  .example{background:var(--cream); border-radius:14px; padding:14px; margin-top:20px; width:100%}
+  .example b{font-weight:600}
+  .note{
+    display:flex; gap:9px; text-align:left; margin-top:18px; font-size:13.5px;
+    line-height:1.45; font-style:italic; color:var(--ink-soft);
+  }
+  .note svg{flex:none; margin-top:2px}
+  .rates{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px}
+  .rate{
+    height:60px; border-radius:16px; padding:0 14px; display:flex; flex-direction:column;
+    justify-content:center; align-items:flex-start; border:1px solid;
+    transition:transform .1s;
+  }
+  .rate:active{transform:scale(.97)}
+  .rate .lbl{font-size:14px; font-weight:700}
+  .rate .itv{font-size:12px; color:var(--ink-soft); margin-top:1px}
+
+  /* ─────────────────────────────  Fin de session  ───────────────────────────── */
+  .summary{flex:1; display:flex; flex-direction:column; padding:28px; justify-content:center; text-align:center}
+  .tick{
+    width:96px;height:96px;border-radius:50%; background:rgba(74,139,95,.13);
+    display:grid;place-items:center; margin:0 auto 26px;
+  }
+
+  /* ─────────────────────────────  Lexique  ───────────────────────────── */
+  .wordrow{
+    display:flex; align-items:center; gap:10px; padding:14px 16px; background:var(--surface);
+    border:1px solid var(--sand); border-radius:18px; margin-bottom:8px; width:100%; text-align:left;
+  }
+  .wordrow .fon{font-family:var(--serif); font-size:18px}
+  .modal{
+    position:absolute; inset:0; background:var(--cream); z-index:40; display:flex; flex-direction:column;
+    animation:slide .26s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes slide{from{transform:translateX(18px);opacity:0}to{transform:none;opacity:1}}
+  .fab{
+    position:absolute; left:20px; right:20px; bottom:calc(84px + env(safe-area-inset-bottom));
+    height:54px; border-radius:20px; background:var(--forest); color:#fff; font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:8px; z-index:10;
+    box-shadow:0 14px 28px -12px rgba(46,107,85,.85);
+  }
+
+  /* ─────────────────────────────  Stats  ───────────────────────────── */
+  .week{display:flex; align-items:flex-end; justify-content:space-between; height:78px}
+  .day{display:flex; flex-direction:column; align-items:center; gap:8px}
+  .day .col{width:26px; border-radius:8px; background:var(--sand); transition:height .5s cubic-bezier(.2,.8,.2,1)}
+  .day .dl{font-size:11px; color:var(--ink-soft); font-weight:500}
+  .day.today .dl{color:var(--ink); font-weight:700}
+  .seg{display:flex; background:var(--sand); border-radius:12px; padding:3px; gap:2px}
+  .seg button{padding:5px 11px; border-radius:9px; font-size:12px; font-weight:600; color:var(--ink-soft)}
+  .seg button.on{background:var(--surface); color:var(--ink)}
+  .statbig{font-family:var(--serif); font-size:26px; font-weight:700; line-height:1.1}
+
+  /* ─────────────────────────────  Onboarding  ───────────────────────────── */
+  .onb{flex:1; display:flex; flex-direction:column; padding:0 26px}
+  .onb h2{font-size:34px; line-height:1.16}
+  .dots{display:flex; gap:6px}
+  .dot{height:5px; border-radius:5px; background:var(--sand); flex:1}
+  .dot.on{background:var(--forest)}
+  .choice{
+    display:flex; align-items:center; gap:12px; padding:18px; border-radius:18px;
+    border:1px solid var(--sand); background:var(--surface); margin-bottom:12px; width:100%; text-align:left;
+    font-size:15px;
+  }
+  .choice.on{border:2px solid var(--forest); background:rgba(46,107,85,.07); font-weight:600}
+  .tint{background:rgba(107,93,82,.08)}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+
+<script src="words.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   Gbè — prototype cliquable.
+   Ce fichier est une maquette fidèle de l'app Flutter (mêmes écrans, mêmes
+   couleurs, même algorithme). Il sert à valider le design et les parcours
+   avant d'écrire le code natif — pas à être livré en production.
+   ════════════════════════════════════════════════════════════════════════ */
+
+const DECKS = window.DECKS, WORDS = window.WORDS;
+const BY_ID  = Object.fromEntries(WORDS.map(w => [w.id, w]));
+const DECK_BY_ID = Object.fromEntries(DECKS.map(d => [d.id, d]));
+const wordsOf = id => WORDS.filter(w => w.deck === id);
+
+/* ─────────────────────────────  SM-2 (port de lib/core/srs.dart)  ─────────────────────────────
+   Mêmes règles que la version Dart : intervalles 1 j puis 3 j, puis
+   multiplication par la facilité ; `again` remet la série à zéro. */
+const SRS = {
+  minEase: 1.3, maxEase: 2.8, relearnMinutes: 10, firstIntervals: [1, 3],
+
+  fresh(id){ return {wordId:id, ease:2.5, intervalDays:0, repetitions:0,
+                     lapses:0, reviews:0, due:Date.now(), lastReviewed:null}; },
+
+  review(c, rating, now){
+    const isFirst = c.reviews === 0;
+    let ease = c.ease;
+    if (rating === 'again')      ease -= isFirst ? 0 : 0.2;
+    else if (rating === 'hard')  ease += isFirst ? 0 : -0.15;
+    else if (rating === 'easy')  ease += 0.15;
+    ease = Math.min(SRS.maxEase, Math.max(SRS.minEase, ease));
+
+    let interval, repetitions, lapses;
+    if (rating === 'again'){
+      interval = 0; repetitions = 0; lapses = c.lapses + 1;
+    } else {
+      lapses = c.lapses; repetitions = c.repetitions + 1;
+      const step = isFirst ? 0 : c.repetitions;
+      if (step < SRS.firstIntervals.length){
+        interval = SRS.firstIntervals[step];
+      } else {
+        const prev = c.intervalDays <= 0 ? SRS.firstIntervals[1] : c.intervalDays;
+        const factor = rating === 'hard' ? 1.2 : rating === 'good' ? ease : ease * 1.3;
+        const next = Math.round(prev * factor);
+        interval = next <= prev ? prev + 1 : next;
+      }
+    }
+    const due = rating === 'again'
+      ? now + SRS.relearnMinutes * 60000
+      : now + interval * 86400000;
+
+    return {...c, ease, intervalDays:interval, repetitions, lapses,
+            reviews:c.reviews + 1, due, lastReviewed:now};
+  },
+
+  humanDays(d){
+    if (d <= 0) return "aujourd'hui";
+    if (d === 1) return '1 j';
+    if (d < 30) return d + ' j';
+    if (d < 365) { const m = d/30; return m < 1.5 ? '1 mois' : Math.round(m) + ' mois'; }
+    const y = d/365; return y < 1.5 ? '1 an' : Math.round(y) + ' ans';
+  },
+
+  intervalLabel(c, rating, now){
+    const next = SRS.review(c, rating, now);
+    return rating === 'again' ? SRS.relearnMinutes + ' min' : SRS.humanDays(next.intervalDays);
+  }
+};
+
+/* ─────────────────────────────  État + persistance  ───────────────────────────── */
+const KEY = 'gbe.prototype.v1';
+const defaultState = () => ({
+  onboarded:false, tab:0, view:'home',
+  goal:10, cards:{}, days:{},
+  deckId:null, wordId:null,
+  session:null,
+  onbPage:0, onbGoal:10
+});
+let S = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    return {...defaultState(), ...parsed, view:'home', session:null, wordId:null, deckId:null};
+  }catch(e){ return defaultState(); }
+}
+function save(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify({
+      onboarded:S.onboarded, tab:S.tab, goal:S.goal, cards:S.cards, days:S.days
+    }));
+  }catch(e){}
+}
+
+/* ─────────────────────────────  Modèle de progression  ───────────────────────────── */
+const dayKey = (d=new Date()) =>
+  d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+
+const cardOf     = id => S.cards[id] || null;
+const isNew      = c => !c || c.reviews === 0;
+const intervalOf = c => c ? c.intervalDays : 0;
+const isAcquired = c => c && c.intervalDays >= 21 && c.repetitions >= 3;
+const isLearning = c => c && !isNew(c) && !isAcquired(c);
+const strength   = c => {
+  if (isNew(c)) return 0;
+  return 0.15 + Math.min(1, c.intervalDays/21) * 0.85;
+};
+
+function reviewsToday(){ return (S.days[dayKey()] || {reviews:0}).reviews; }
+
+function buildQueue(){
+  const due = [], fresh = [];
+  for (const w of WORDS){
+    const c = cardOf(w.id);
+    if (isNew(c)) fresh.push(w);
+    else if (c.due <= Date.now()) due.push(w);
+  }
+  due.sort((a,b) => cardOf(a.id).due - cardOf(b.id).due);
+  return [...due, ...fresh];
+}
+
+function remainingToday(){
+  const left = S.goal - reviewsToday();
+  if (left <= 0) return 0;
+  return Math.min(left, buildQueue().length);
+}
+
+function streak(){
+  let count = 0, cursor = new Date();
+  cursor.setHours(0,0,0,0);
+  if (!(S.days[dayKey(cursor)]?.reviews)) cursor.setDate(cursor.getDate()-1);
+  while (true){
+    const log = S.days[dayKey(cursor)];
+    if (!log || !log.reviews) break;
+    count++; cursor.setDate(cursor.getDate()-1);
+  }
+  return count;
+}
+
+const acquiredCount = () => Object.values(S.cards).filter(isAcquired).length;
+const learningCount = () => Object.values(S.cards).filter(isLearning).length;
+const mastery = () => WORDS.reduce((s,w) => s + strength(cardOf(w.id)), 0) / WORDS.length;
+const deckMastery = id => wordsOf(id).reduce((s,w) => s + strength(cardOf(w.id)), 0) / wordsOf(id).length;
+const deckSeen = id => wordsOf(id).filter(w => !isNew(cardOf(w.id))).length;
+const totalReviews = () => Object.values(S.days).reduce((s,d) => s + d.reviews, 0);
+
+function recordReview(word, next){
+  const before = cardOf(word.id);
+  const wasNew = isNew(before);
+  S.cards[word.id] = next;
+  const k = dayKey();
+  const d = S.days[k] || {reviews:0, newWords:0};
+  S.days[k] = {reviews:d.reviews+1, newWords:d.newWords + (wasNew ? 1 : 0)};
+  save();
+}
+
+/* ─────────────────────────────  Icônes  ───────────────────────────── */
+const ico = {
+  learn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M5 10v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 20.5V5.5"/><path d="M9 8h7"/></svg>',
+  stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
+  fire:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C98A2E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.4 0 7-2.9 7-6.5 0-4.5-4-6-4-10.5-2 1-3.5 3-3.5 5.5C10 9 8 8 8 8c0 2-3 3.5-3 7.5C5 19.1 7.6 22 12 22Z"/></svg>',
+  check:'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#4A8B5F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6"/></svg>',
+  bulb:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D89B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>',
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  play:'<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
+};
+
+/* ─────────────────────────────  Rendus  ───────────────────────────── */
+const $ = s => document.querySelector(s);
+function render(){
+  document.getElementById('app').innerHTML = viewHtml();
+  save();
+  document.querySelectorAll('.scroll').forEach(el => { el.scrollTop = el.scrollTop; });
+}
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function greeting(){
+  const h = new Date().getHours();
+  if (h < 11) return 'Kúdó zǎnzǎn';
+  if (h < 16) return 'Kúdó hwemɛ';
+  return 'Kúdó gbadà';
+}
+
+function viewHtml(){
+  if (!S.onboarded) return onboarding();
+  if (S.view === 'study') return study();
+  // La fiche mot est une surcouche : elle passe avant le thème et les onglets.
+  if (S.wordId) return wordModal();
+  if (S.view === 'deck') return deckView();
+  const body = S.tab === 0 ? home() : S.tab === 1 ? library() : stats();
+  return body + tabs();
+}
+
+/* ── Accueil ── */
+function home(){
+  const remaining = remainingToday();
+  const queue = buildQueue();
+  const done = remaining === 0;
+  const pct = Math.min(1, reviewsToday() / S.goal);
+  const st = streak();
+
+  return `<div class="scroll">
+    <div class="top">
+      <div class="grow">
+        <div class="eyebrow">${greeting()}</div>
+        <div class="logo" style="margin-top:6px">Gbè</div>
+      </div>
+      <div class="streak ${st ? '' : 'zero'}">${ico.fire}<span>${st}</span></div>
+    </div>
+
+    <div class="today">
+      <div class="eyebrow" style="color:rgba(255,255,255,.72)">${done ? 'Objectif atteint' : 'Ta session du jour'}</div>
+      <div class="num" style="margin-top:10px">${done ? 'Kwabɔ̀ !' : remaining + (remaining === 1 ? ' mot' : ' mots')}</div>
+      <div style="color:rgba(255,255,255,.72);font-size:14px;margin-top:4px">
+        ${done ? 'Reviens demain : la répétition fait le reste.' : 'prêts à être révisés'}
+      </div>
+      <div class="bar" style="margin-top:20px"><i style="width:${pct*100}%"></i></div>
+      <div style="color:rgba(255,255,255,.72);font-size:12px;margin-top:8px">
+        ${reviewsToday()} / ${S.goal} aujourd'hui${queue.length > remaining ? ` · ${queue.length - remaining} en attente` : ''}
+      </div>
+      <div style="height:18px"></div>
+      <button class="btn light" data-act="start" ${done ? 'disabled' : ''}>
+        ${done ? "Tout est fait pour aujourd'hui" : 'Commencer'}
+      </button>
+    </div>
+
+    <div class="gap20"></div>
+    <div class="pad">
+      <div class="card row" style="gap:18px">
+        <div class="grow"><div class="statbig" style="color:var(--forest)">${acquiredCount()}</div><div class="small muted">mots acquis</div></div>
+        <div style="width:1px;height:38px;background:var(--sand)"></div>
+        <div class="grow"><div class="statbig">${Math.round(mastery()*100)} %</div><div class="small muted">du lexique</div></div>
+        <div style="width:1px;height:38px;background:var(--sand)"></div>
+        <div class="grow"><div class="statbig" style="color:var(--plum)">${totalReviews()}</div><div class="small muted">révisions</div></div>
+      </div>
+
+      <div class="gap28"></div>
+      <div class="row"><h3 class="grow" style="font-size:21px">Tes thèmes</h3>
+        <button class="small muted" data-act="tab" data-tab="1">Tout voir</button></div>
+      <div class="gap12"></div>
+      ${DECKS.slice(0,4).map(deckRow).join('')}
+      <div class="small muted" style="text-align:center;margin:18px 0 8px">
+        ${WORDS.length} mots · hors-ligne · sans compte
+      </div>
+    </div>
+  </div>`;
+}
+
+function deckRow(d){
+  const seen = deckSeen(d.id), total = wordsOf(d.id).length;
+  return `<button class="deck" data-act="deck" data-id="${d.id}">
+    <div class="emo" style="background:${d.color}1f">${d.emoji}</div>
+    <div class="grow">
+      <div class="name">${d.label}</div>
+      <div class="small muted" style="margin:2px 0 8px">${seen} / ${total} mots vus</div>
+      <div class="bar" style="height:5px"><i style="width:${deckMastery(d.id)*100}%;background:${d.color}"></i></div>
+    </div>
+    <div class="muted" style="font-size:20px;margin-left:4px">›</div>
+  </button>`;
+}
+
+/* ── Session d'étude ── */
+function startSession(words){
+  S.session = {queue:[...words], idx:0, revealed:false, answered:0, correct:0, total:words.length};
+  S.view = 'study';
+  render();
+}
+
+function study(){
+  const s = S.session;
+  if (!s || s.queue.length === 0) { S.view = 'home'; return home() + tabs(); }
+  if (s.idx >= s.queue.length) return summary();
+
+  const w = s.queue[s.idx];
+  const deck = DECK_BY_ID[w.deck];
+  const card = cardOf(w.id) || SRS.fresh(w.id);
+  const pct = s.answered / s.queue.length;
+
+  const answer = `
+    <div class="rule"></div>
+    <div class="translation">${esc(w.fr)}</div>
+    ${w.exFon ? `<div class="example">
+        <b>${esc(w.exFon)}</b>
+        ${w.exFr ? `<div class="small muted" style="margin-top:4px">${esc(w.exFr)}</div>` : ''}
+      </div>` : ''}
+    ${w.note ? `<div class="note">${ico.bulb}<div>${esc(w.note)}</div></div>` : ''}`;
+
+  const rates = [['again','À revoir','var(--danger)'],['hard','Difficile','var(--warn)'],
+                 ['good','Bien','var(--forest)'],['easy','Facile','var(--plum)']]
+    .map(([r,label,color]) => `
+      <button class="rate" data-act="rate" data-r="${r}"
+        style="background:${color}1a;border-color:${color}59">
+        <span class="lbl" style="color:${color}">${label}</span>
+        <span class="itv">${SRS.intervalLabel(card, r, Date.now())}</span>
+      </button>`).join('');
+
+  return `<div class="study">
+    <div class="study-top">
+      <button class="xbtn" data-act="quit">✕</button>
+      <div class="grow">
+        <div class="study-count">${s.idx + 1} / ${s.queue.length}</div>
+        <div class="bar" style="height:6px;margin-top:7px"><i style="width:${pct*100}%"></i></div>
+      </div>
+      <div class="pill" style="color:${deck.color};background:${deck.color}1a">${deck.label}</div>
+    </div>
+
+    <div class="flip" data-act="reveal">
+      <div class="pill" style="color:${deck.color};background:${deck.color}1a;letter-spacing:.6px">
+        ${deck.emoji} &nbsp;${deck.label.toUpperCase()}
+      </div>
+      <div class="word">${esc(w.fon)}</div>
+      <div class="pron">${esc(w.pron)}</div>
+      ${s.revealed ? `<div class="answer" style="width:100%">${answer}</div>`
+                   : `<div class="reveal-hint">Touche la carte pour révéler</div>`}
+    </div>
+
+    <div style="height:14px"></div>
+    ${s.revealed ? `<div class="rates">${rates}</div>` : `
+      <button class="btn" data-act="reveal">Révéler la réponse</button>
+      <div class="small muted" style="text-align:center;margin-top:10px">Devine d'abord à voix haute, puis vérifie.</div>`}
+  </div>`;
+}
+
+function summary(){
+  const s = S.session;
+  const acc = s.answered ? Math.round(s.correct / s.answered * 100) : 0;
+  return `<div class="summary">
+    <div class="tick">${ico.check}</div>
+    <h2 style="font-size:27px">${s.answered === 0 ? 'Rien à réviser' : 'Session terminée'}</h2>
+    <div class="gap12"></div>
+    <div class="muted">${s.answered === 0
+      ? 'Reviens plus tard : les mots reviennent au bon moment.'
+      : `${s.answered} carte${s.answered > 1 ? 's' : ''} révisée${s.answered > 1 ? 's' : ''}`}</div>
+    ${s.answered ? `<div class="gap28"></div>
+      <div class="row" style="justify-content:center;gap:38px">
+        <div><div class="statbig" style="color:var(--forest)">${s.correct}</div><div class="small muted">retenues</div></div>
+        <div><div class="statbig">${acc} %</div><div class="small muted">de réussite</div></div>
+      </div>` : ''}
+    <div class="gap28"></div>
+    <button class="btn" data-act="quit">Continuer</button>
+  </div>`;
+}
+
+/* ── Lexique ── */
+function library(){
+  return `<div class="scroll">
+    <div class="top"><div class="grow"><h2 style="font-size:27px">Le lexique</h2></div></div>
+    <div class="pad">
+      <div class="small muted">${WORDS.length} mots en ${DECKS.length} thèmes. Tout est hors-ligne.</div>
+      <div class="gap16"></div>
+      ${DECKS.map(d => {
+        const seen = deckSeen(d.id);
+        return `<button class="deck" data-act="deck" data-id="${d.id}" style="align-items:flex-start;padding:16px">
+          <div class="emo" style="width:50px;height:50px;border-radius:16px;font-size:22px;background:${d.color}1f">${d.emoji}</div>
+          <div class="grow">
+            <div class="name">${d.label}</div>
+            <div class="small muted" style="margin:3px 0 10px">${d.subtitle}</div>
+            <div class="row" style="gap:7px">
+              <span class="pill" style="color:${d.color};background:${d.color}1a">${wordsOf(d.id).length} mots</span>
+              ${seen ? `<span class="pill">${seen} vus</span>` : ''}
+            </div>
+          </div>
+          <div class="muted" style="font-size:20px">›</div>
+        </button>`;
+      }).join('')}
+      <div style="height:14px"></div>
+    </div>
+  </div>`;
+}
+
+function deckView(){
+  const d = DECK_BY_ID[S.deckId];
+  const ws = wordsOf(d.id);
+  return `<div class="scroll">
+    <div class="top">
+      <button class="xbtn" data-act="back" style="margin-top:6px">${ico.back}</button>
+      <div class="grow"><h2 style="font-size:24px">${d.label}</h2>
+        <div class="small muted">${d.subtitle}</div></div>
+    </div>
+    <div class="pad" style="padding-bottom:100px">
+      <div class="gap12"></div>
+      ${ws.map(w => {
+        const c = cardOf(w.id);
+        const status = isNew(c) ? ['nouveau','var(--ink-soft)'] : isAcquired(c) ? ['acquis','var(--forest)'] : ['en cours','var(--ochre)'];
+        return `<button class="wordrow" data-act="word" data-id="${w.id}">
+          <div class="grow">
+            <div class="fon">${esc(w.fon)}</div>
+            <div class="small muted" style="margin-top:2px">${esc(w.fr)}</div>
+          </div>
+          <span class="pill" style="color:${status[1]};background:${status[1]}1a">${status[0]}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <button class="fab" data-act="deck-study" data-id="${d.id}">${ico.play} Réviser ce thème</button>
+  </div>`;
+}
+
+function wordModal(){
+  const w = BY_ID[S.wordId];
+  const d = DECK_BY_ID[w.deck];
+  return `<div class="modal">
+    <div class="top">
+      <button class="xbtn" data-act="back" style="margin-top:6px">${ico.back}</button>
+      <div class="grow"></div>
+      <span class="pill" style="color:${d.color};background:${d.color}1a;margin-top:8px">${d.label}</span>
+    </div>
+    <div class="scroll pad" style="padding-bottom:34px">
+      <div style="font-family:var(--serif);font-size:36px;line-height:1.2;letter-spacing:-.7px">${esc(w.fon)}</div>
+      <div class="pron" style="margin-top:8px">${esc(w.pron)}</div>
+      <div class="gap20"></div><div style="height:1px;background:var(--sand)"></div><div class="gap20"></div>
+      <div class="eyebrow" style="color:var(--ink-soft)">Français</div>
+      <div class="translation" style="margin-top:6px">${esc(w.fr)}</div>
+      ${w.exFon ? `<div class="gap28"></div>
+        <div class="eyebrow" style="color:var(--ink-soft)">En contexte</div>
+        <div class="card" style="margin-top:8px">
+          <b style="font-size:17px">${esc(w.exFon)}</b>
+          ${w.exFr ? `<div class="small muted" style="margin-top:6px">${esc(w.exFr)}</div>` : ''}
+        </div>` : ''}
+      ${w.note ? `<div class="gap28"></div>
+        <div class="eyebrow" style="color:var(--ink-soft)">À savoir</div>
+        <div style="margin-top:8px;line-height:1.6">${esc(w.note)}</div>` : ''}
+      <div class="gap28"></div>
+      <div style="background:rgba(241,228,209,.6);border-radius:14px;padding:14px;display:flex;gap:10px">
+        <span style="flex:none">ℹ️</span>
+        <div class="small muted">Le fon est une langue tonale et son orthographe varie selon les sources.
+        Fais relire chaque mot par un locuteur natif avant publication.</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── Progrès ── */
+function stats(){
+  const days = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i = 6; i >= 0; i--){
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    days.push({date:d, key:dayKey(d), reviews:(S.days[dayKey(d)] || {reviews:0}).reviews});
+  }
+  const max = Math.max(S.goal, ...days.map(d => d.reviews), 1);
+  const initials = ['D','L','M','M','J','V','S'];
+  const st = streak();
+
+  return `<div class="scroll">
+    <div class="top"><div class="grow"><h2 style="font-size:27px">Ta progression</h2></div></div>
+    <div class="pad">
+      <div class="card row" style="gap:18px">
+        <div class="grow"><div class="statbig" style="color:var(--warn)">${st}</div>
+          <div class="small muted">${st > 1 ? "jours d'affilée" : "jour d'affilée"}</div></div>
+        <div style="width:1px;height:44px;background:var(--sand)"></div>
+        <div class="grow"><div class="statbig">${totalReviews()}</div>
+          <div class="small muted">révisions au total</div></div>
+      </div>
+      <div class="gap16"></div>
+
+      <div class="card">
+        <div style="font-weight:600;font-size:15px">7 derniers jours</div>
+        <div class="gap20"></div>
+        <div class="week">
+          ${days.map((d,i) => `<div class="day ${i===6?'today':''}">
+            <div class="col" style="height:${8 + (d.reviews/max)*58}px;background:${
+              i===6 ? 'var(--terra)' : d.reviews >= S.goal ? 'var(--forest)' : 'var(--sand)'}"></div>
+            <div class="dl">${initials[d.date.getDay()]}</div>
+          </div>`).join('')}
+        </div>
+        <div class="gap16"></div><div style="height:1px;background:var(--sand)"></div><div class="gap12"></div>
+        <div class="row">
+          <div class="grow small muted">Objectif quotidien</div>
+          <div class="seg">
+            ${[5,10,20].map(g => `<button class="${S.goal===g?'on':''}" data-act="goal" data-g="${g}">${g}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="gap16"></div>
+
+      <div class="card">
+        <div style="font-weight:600;font-size:15px">Le lexique</div>
+        <div class="gap16"></div>
+        <div class="row">
+          <div class="grow"><div class="statbig" style="color:var(--forest)">${acquiredCount()}</div><div class="small muted">acquis</div></div>
+          <div class="grow"><div class="statbig" style="color:var(--ochre)">${learningCount()}</div><div class="small muted">en cours</div></div>
+          <div class="grow"><div class="statbig">${WORDS.length - acquiredCount() - learningCount()}</div><div class="small muted">à découvrir</div></div>
+        </div>
+        <div class="gap20"></div>
+        <div class="bar"><i style="width:${mastery()*100}%"></i></div>
+        <div class="small muted" style="margin-top:8px">${Math.round(mastery()*100)} % de maîtrise sur ${WORDS.length} mots</div>
+      </div>
+      <div class="gap16"></div>
+
+      <div class="card">
+        <div style="font-weight:600;font-size:15px">Par thème</div>
+        <div class="gap16"></div>
+        ${DECKS.map(d => `<div style="margin-bottom:14px">
+          <div class="row" style="gap:8px">
+            <span style="font-size:13px">${d.emoji}</span>
+            <div class="grow" style="font-size:14px">${d.label}</div>
+            <div class="small muted">${Math.round(deckMastery(d.id)*100)} %</div>
+          </div>
+          <div class="bar" style="height:5px;margin-top:6px"><i style="width:${deckMastery(d.id)*100}%;background:${d.color}"></i></div>
+        </div>`).join('')}
+      </div>
+      <div class="gap16"></div>
+
+      <div class="card">
+        <div style="font-weight:600;font-size:15px">Comment ça marche</div>
+        <div class="small muted" style="margin-top:10px;line-height:1.6">
+          Gbè utilise la répétition espacée : chaque mot est reprogrammé au moment où tu risques
+          de l'oublier. Un mot oublié revient après 10 minutes, un mot solide peut attendre plusieurs mois.
+        </div>
+      </div>
+      <div class="gap16"></div>
+      <button class="btn ghost" data-act="reset">Réinitialiser ma progression</button>
+      <div style="height:20px"></div>
+    </div>
+  </div>`;
+}
+
+/* ── Onboarding ── */
+function onboarding(){
+  const p = S.onbPage;
+  const content = [
+    `<div class="pill" style="color:var(--terra);background:rgba(196,98,63,.12);letter-spacing:1px">FƆ̀NGBÈ</div>
+     <div class="gap20"></div>
+     <h2 style="font-size:40px">Une langue<br>se transmet<br>à l'oral.</h2>
+     <div class="gap20"></div>
+     <div style="line-height:1.6;color:var(--ink-soft);font-size:15.5px">
+       Gbè t'aide à garder le fon vivant : des mots justes, leurs tons, et le moment exact où les réviser.
+     </div>
+     <div class="gap28"></div>
+     <div class="row" style="gap:8px;flex-wrap:wrap">
+       <span class="pill" style="color:var(--forest);background:rgba(46,107,85,.12)">${WORDS.length} mots</span>
+       <span class="pill" style="color:var(--ochre);background:rgba(216,155,74,.16)">${DECKS.length} thèmes</span>
+       <span class="pill" style="color:var(--plum);background:rgba(123,90,134,.13)">hors-ligne</span>
+     </div>`,
+    `<h2 style="font-size:30px">Trois minutes,<br>puis on oublie<br>volontairement.</h2>
+     <div class="gap16"></div>
+     <div style="line-height:1.6;color:var(--ink-soft);font-size:15.5px">
+       La répétition espacée replace chaque mot juste avant que tu ne l'oublies.
+     </div>
+     <div class="gap20"></div>
+     <div class="card">
+       ${[['Oublié','10 min','var(--danger)'],['Difficile','4 jours','var(--warn)'],
+          ['Bien','8 jours','var(--forest)'],['Facile','1 mois','var(--plum)']]
+        .map(([l,i,c],k) => `<div class="row" style="gap:12px;${k?'margin-top:12px':''}">
+          <span style="width:10px;height:10px;border-radius:50%;background:${c};flex:none"></span>
+          <div class="grow">${l}</div>
+          <div style="color:${c};font-weight:700;font-size:14px">${i}</div>
+        </div>`).join('')}
+     </div>`,
+    `<h2 style="font-size:30px">Combien de mots<br>par jour ?</h2>
+     <div class="gap12"></div>
+     <div style="color:var(--ink-soft)">Tu pourras changer d'avis à tout moment.</div>
+     <div class="gap28"></div>
+     ${[[5,'Léger — 5 mots, 2 minutes'],[10,'Régulier — 10 mots, 4 minutes'],[20,'Intensif — 20 mots, 8 minutes']]
+      .map(([g,l]) => `<button class="choice ${S.onbGoal===g?'on':''}" data-act="onbgoal" data-g="${g}">
+        <div class="grow">${l}</div>${S.onbGoal===g ? '<span style="color:var(--forest)">✓</span>' : ''}
+      </button>`).join('')}`
+  ][p];
+
+  return `<div class="onb">
+    <div class="row" style="gap:16px;padding:16px 0 6px">
+      <div class="dots grow">${[0,1,2].map(i => `<div class="dot ${i<=p?'on':''}"></div>`).join('')}</div>
+      <button class="small muted" data-act="onbskip">Passer</button>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center">${content}</div>
+    <div style="padding:0 0 18px">
+      <button class="btn" data-act="onbnext">${p === 2 ? 'Commencer' : 'Continuer'}</button>
+      <div class="small muted" style="text-align:center;margin-top:10px">Sans compte · sans publicité · hors-ligne</div>
+    </div>
+  </div>`;
+}
+
+/* ── Navigation basse ── */
+function tabs(){
+  const items = [[0,'Apprendre',ico.learn],[1,'Lexique',ico.book],[2,'Progrès',ico.stats]];
+  return `<div class="tabs">${items.map(([i,l,ic]) => `
+    <button class="tab ${S.tab===i?'on':''}" data-act="tab" data-tab="${i}">${ic}<span>${l}</span></button>
+  `).join('')}</div>`;
+}
+
+/* ─────────────────────────────  Événements  ───────────────────────────── */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+
+  switch (act){
+    case 'tab':
+      S.tab = +el.dataset.tab; S.view = 'home'; S.wordId = null; render(); break;
+
+    case 'start': {
+      const n = remainingToday();
+      if (n > 0) startSession(buildQueue().slice(0, n));
+      break;
+    }
+
+    case 'reveal':
+      if (S.session){ S.session.revealed = true; render(); }
+      break;
+
+    case 'rate': {
+      const s = S.session; if (!s || !s.revealed) break;
+      const w = s.queue[s.idx];
+      const cur = cardOf(w.id) || SRS.fresh(w.id);
+      const next = SRS.review(cur, el.dataset.r, Date.now());
+      recordReview(w, next);
+      if (el.dataset.r === 'again'){
+        // Une carte oubliée revient un peu plus loin dans la session.
+        const at = Math.min(s.queue.length, s.idx + 4);
+        s.queue.splice(at, 0, w);
+      } else { s.correct++; }
+      s.answered++; s.idx++; s.revealed = false;
+      render(); break;
+    }
+
+    case 'quit':
+      S.session = null; S.view = 'home'; S.tab = 0; render(); break;
+
+    case 'deck':
+      S.deckId = el.dataset.id; S.view = 'deck'; render(); break;
+
+    case 'word':
+      S.wordId = el.dataset.id; render(); break;
+
+    case 'back':
+      if (S.wordId){ S.wordId = null; } else { S.view = 'home'; S.deckId = null; }
+      render(); break;
+
+    case 'deck-study':
+      startSession(wordsOf(el.dataset.id)); break;
+
+    case 'goal':
+      S.goal = +el.dataset.g; render(); break;
+
+    case 'reset':
+      if (confirm('Effacer toute la progression du prototype ?')){
+        S = defaultState(); S.onboarded = true; render();
+      }
+      break;
+
+    case 'onbgoal':
+      S.onbGoal = +el.dataset.g; render(); break;
+
+    case 'onbnext':
+      if (S.onbPage === 2){ S.goal = S.onbGoal; S.onboarded = true; S.tab = 0; }
+      else S.onbPage++;
+      render(); break;
+
+    case 'onbskip':
+      S.onboarded = true; S.tab = 0; render(); break;
+  }
+});
+
+render();
+</script>
+</body>
+</html>
